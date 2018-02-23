@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# A script to run a git command with selected files listed in git status. The
+# files will be selected by fzf from the list of files in git status.
+#
+# Usage: git command [options...]
+#
+# Examples:
+#  git pick diff
+
+set -euo pipefail
+IFS=$'\n\t'
+
+[ $# -ge 1 ] || { echo 1>&2 "Must give git command"; exit 1; }
+
+git -c color.status=always status --short --branch |\
+  fzf --header-lines=1 --ansi --multi --select-1 |\
+  path-extractor |\
+  xargs git "$@"

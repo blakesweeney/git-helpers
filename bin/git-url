@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+USAGE=<<EOS
+Usage: git url [options]
+Summary: Get the github url for a repository.
+EOS
+
+set -euo pipefail
+IFS=$'\n\t'
+
+# sed -En 's/git(@|:\/\/)github.com(:|\/)(.+)\/(.+).git/https:\/\/github.com\/\3\/\4/p'
+
+git config remote.origin.url |\
+  sed -En 's|git@(.+):(.+)\.git|https://www.\1/\2|p'
