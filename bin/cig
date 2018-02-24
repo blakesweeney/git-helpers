@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+# A script to check the status of a folder of repos. The idea is that we are
+# looking to answer 'Can I Go'. That is only supposed to be true if the repos
+# have no uncommitted changes and are pushed.
+
+set -euo pipefail
+IFS=$'\n\t'
+
+status()
+{
+  dir="$1"
+  cd "$dir"
+  branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  changes="$(git status --porcelain |\
+    grep -v '^#' |\
+    awk '{ print $1 }' |\
+    sed 's|??|N|' |\
+    sort |\
+    datamash -t ' ' -g 1 count 1 |\
+    awk '{ 
+      printf "\033[31m%s(%i)\033[0m\n", $1, $2 
+    }' |\
+    tr '\n' ' ')"
+
+  printf "\033[0;34m[%s]\033[0m " "$branch"
+  if [[ -z "$changes" ]]; then
+    current="$(git rev-parse "$branch")"
+    remote="$(git rev-parse "origin/$branch" 2> /dev/null || true)"
+    if [[ "$current" != "$remote" ]]; then
+      printf "\033[0;36mP\033[0m\n"
+    else
+      printf "\033[0;32m✔\033[0m\n"
+    fi
+  else
+    echo "$changes"
+  fi
+}
+
+paths=($@)
+for path in "${paths[@]}"; do
+  if [[ ! -d "$path" ]]; then
+    echo 1>&2 "Path $path does not exist"
+    continue
+  fi
+  name="$(realpath "$path")"
+  echo "Checking $name ..."
+  cd "$path"
+  find . -maxdepth 3 -name '.git' -type d | while read repo; do
+    full_path="$(realpath "$repo/..")"
+    short_path="${full_path#$name}"
+    short_path="${short_path#/}"
+    : "${short_path:=.}"
+    echo "- $short_path $(status "$full_path")"
+  done
+
+  echo ""
+done
