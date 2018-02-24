@@ -4,5 +4,5 @@ set -euo pipefail
 IFS=$'\n\t'
 
 git branch --merged |\
-grep -E -v "(^\*|master|dev)" |\
-xargs git branch -d
+  grep -E -v "(^\*|master|dev)" |\
+  xargs git branch -d
