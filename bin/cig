@@ -46,7 +46,7 @@ for path in "${paths[@]}"; do
   name="$(realpath "$path")"
   echo "Checking $name ..."
   pushd "$path" > /dev/null
-  find . -maxdepth 3 -name '.git' -type d | while read repo; do
+  find . -maxdepth 3 -name '.git' -type d | sort -u | while read repo; do
     full_path="$(realpath "$repo/..")"
     short_path="${full_path#$name}"
     short_path="${short_path#/}"
